@@ -95,7 +95,7 @@ async function tag_edit() {
 }
 
 // Close vote or flag as 'Needs debugging details'
-async function cv_debug() {
+async function close_vote(path) {
     if (!can(privs.flag) && !can(privs.cv)) return;
     if (can(privs.flag) && !can(privs.cv)) {
         document.querySelector('.js-flag-post-link').click();
@@ -103,13 +103,15 @@ async function cv_debug() {
         document.querySelector('.js-flag-load-close').click();
         await waitForEl('.js-close-question-link');
     }
-
     document.querySelector('.js-close-question-link').click();
-    await waitForEl('#closeReasonId-SiteSpecific');
-    document.querySelector('#closeReasonId-SiteSpecific').click();
-    await waitForEl('#siteSpecificCloseReasonId-13-');
-    document.querySelector('#siteSpecificCloseReasonId-13-').click();
+
+    for (const link of path) {
+        await waitForEl(link);
+        document.querySelector(link).click();
+    }
 }
+const cv_debug = () => close_vote(['#closeReasonId-SiteSpecific', '#siteSpecificCloseReasonId-13-']);
+const cv_typo = () => close_vote(['#closeReasonId-SiteSpecific', '#siteSpecificCloseReasonId-11-']);
 
 ///
 // Fast Actions
@@ -141,19 +143,17 @@ function tag_spam_fa(bar) {
     });
 }
 
+// Close vote reasons as fast-action
+function cv_fa(bar) {
+    create_fast_action(bar, 'Needs debug', cv_debug);
+    create_fast_action(bar, 'No Repo / Typo', cv_typo);
+}
+
 // Comment/retag 'Tag Spam' fast-action
 function java_is_not_javascript_fa(bar) {
     create_fast_action(bar, 'Java/JS', async () => {
         tag_edit();
         await addComment('[Java is not JavaScript!](http://javascriptisnotjava.com/)');
-    });
-}
-
-// Close as 'needs debugging details' fast-action
-function cv_debug_fa(bar) {
-    if (!can(privs.flag) && !can(privs.cv)) return;
-    create_fast_action(bar, 'Needs debug', async () => {
-        cv_debug();
     });
 }
 
@@ -173,7 +173,7 @@ function cv_debug_fa(bar) {
 
     if (can(privs.flag) || can(privs.cv)) {
         const reasons_bar = create_reasons_bar();
-        cv_debug_fa(reasons_bar);
+        cv_fa(reasons_bar);
     }
 
     tag_edit_fa();
