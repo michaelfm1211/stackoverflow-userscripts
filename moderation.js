@@ -128,6 +128,16 @@ function tag_edit_fa() {
     document.querySelector('.post-taglist>div>.js-post-tag-list-wrapper').appendChild(btn);
 }
 
+// Comment/close 'MCVE' fast-action
+function mcve_fa(bar) {
+    create_fast_action(bar, 'MCVE', async () => {
+        await cv_debug();
+        await addComment('Please edit your question to include a ' +
+                         '[minimal reproducible example](https://stackoverflow.com/help/minimal-reproducible-example)' +
+                         ' of the shortest code necessary to replicate the issue.');
+    });
+}
+
 // Comment/close 'Image of Code' fast-action
 function image_of_code_fa(bar) {
     create_fast_action(bar, 'Image of Code', async () => {
@@ -180,6 +190,7 @@ function not_in_english(bar) {
     if (can(privs.comment)) {
         const comments_bar = create_comments_bar();
         image_of_code_fa(comments_bar);
+        mcve_fa(comments_bar);
         tag_spam_fa(comments_bar);
         java_is_not_javascript_fa(comments_bar);
         not_in_english(comments_bar);
