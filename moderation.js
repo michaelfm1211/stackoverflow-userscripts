@@ -110,6 +110,7 @@ async function close_vote(path) {
         document.querySelector(link).click();
     }
 }
+const cv_details = () => close_vote(['#closeReasonId-NeedsDetailsOrClarity']);
 const cv_debug = () => close_vote(['#closeReasonId-SiteSpecific', '#siteSpecificCloseReasonId-13-']);
 const cv_typo = () => close_vote(['#closeReasonId-SiteSpecific', '#siteSpecificCloseReasonId-11-']);
 
@@ -145,6 +146,7 @@ function tag_spam_fa(bar) {
 
 // Close vote reasons as fast-action
 function cv_fa(bar) {
+    create_fast_action(bar, 'Details / Clarity', cv_details);
     create_fast_action(bar, 'Needs debug', cv_debug);
     create_fast_action(bar, 'No Repo / Typo', cv_typo);
 }
@@ -154,6 +156,17 @@ function java_is_not_javascript_fa(bar) {
     create_fast_action(bar, 'Java/JS', async () => {
         tag_edit();
         await addComment('[Java is not JavaScript!](http://javascriptisnotjava.com/)');
+    });
+}
+
+// Not in english fast-action
+function not_in_english(bar) {
+    create_fast_action(bar, 'English-only', async () => {
+        cv_details();
+        await addComment('Welcome to Stack Overflow. This is an ' +
+                         '[English-only](https://meta.stackoverflow.com/a/297680) site. ' +
+                         'Please either translate your question to English or delete it ' +
+                         'and post it on a language-specific site.');
     });
 }
 
@@ -169,6 +182,7 @@ function java_is_not_javascript_fa(bar) {
         image_of_code_fa(comments_bar);
         tag_spam_fa(comments_bar);
         java_is_not_javascript_fa(comments_bar);
+        not_in_english(comments_bar);
     }
 
     if (can(privs.flag) || can(privs.cv)) {
