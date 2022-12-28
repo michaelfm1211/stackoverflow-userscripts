@@ -42,6 +42,11 @@ function waitForEl(sel) {
     });
 }
 
+// Checks if question is not closed
+function not_closed() {
+    return document.querySelector('.js-close-question-link').textContent.contains('Close');
+}
+
 // Create bar for the comment actions
 function create_comments_bar() {
     const container = document.createElement('span');
@@ -96,7 +101,7 @@ async function tag_edit() {
 
 // Close vote or flag as 'Needs debugging details'
 async function close_vote(path) {
-    if (!can(privs.flag) && !can(privs.cv)) return;
+    if ((!can(privs.flag) && !can(privs.cv)) || !not_closed()) return;
     if (can(privs.flag) && !can(privs.cv)) {
         document.querySelector('.js-flag-post-link').click();
         await waitForEl('.js-flag-load-close');
@@ -196,7 +201,7 @@ function not_in_english(bar) {
         not_in_english(comments_bar);
     }
 
-    if (can(privs.flag) || can(privs.cv)) {
+    if ((can(privs.flag) || can(privs.cv)) && not_closed()) {
         const reasons_bar = create_reasons_bar();
         cv_fa(reasons_bar);
     }
