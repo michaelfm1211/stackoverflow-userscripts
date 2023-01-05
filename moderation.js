@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         michaelfm1211's Moderation Fast Actions
 // @namespace    https://github.com/michaelfm1211/stackoverflow-userscripts
-// @version      1.0
+// @version      0.1
 // @description  Faster actions for common moderation tasks.
 // @author       Michael M
 // @match        https://stackoverflow.com/questions/*
@@ -47,13 +47,16 @@ function not_closed() {
     return document.querySelector('.js-close-question-link').textContent.contains('Close');
 }
 
-// Create bar for the comment actions
-function create_comments_bar() {
-    const container = document.createElement('span');
-    container.style.float = 'right';
-
-    document.querySelector('.comments-link').insertAdjacentElement('afterend', container);
-    return container;
+// Create bars for the comment actions
+function create_comment_bars() {
+    const commentLinks = [...document.querySelectorAll('.comments-link:not(.dno)')];
+    console.log(commentLinks)
+    const containers = commentLinks.map(commentLink => {
+        const container = document.createElement('span');
+        container.style.float = 'right';
+        return commentLink.insertAdjacentElement('afterend', container)
+    });
+    return containers;
 }
 
 // Create close reasons bar
@@ -82,9 +85,9 @@ function create_fast_action(bar, name, callback) {
     bar.appendChild(outer);
 }
 
-async function addComment(comment) {
+async function addComment(bar, comment) {
     if (!can(privs.comment)) return;
-    document.querySelector('.js-add-link').click();
+    bar.parentNode.querySelector('.js-add-link').click();
     await waitForEl('.js-comment-text-input');
     const input = document.querySelector('.js-comment-text-input');
     input.textContent = comment;
@@ -137,7 +140,7 @@ function tag_edit_fa() {
 function mcve_fa(bar) {
     create_fast_action(bar, 'MCVE', async () => {
         await cv_debug();
-        await addComment('Please edit your question to include a ' +
+        await addComment(bar, 'Please edit your question to include a ' +
                          '[minimal reproducible example](https://stackoverflow.com/help/minimal-reproducible-example)' +
                          ' of the shortest code necessary to replicate the issue.');
     });
@@ -147,7 +150,7 @@ function mcve_fa(bar) {
 function image_of_code_fa(bar) {
     create_fast_action(bar, 'Image of Code', async () => {
         await cv_debug();
-        await addComment('[Please do not upload images of code/data/errors.](//meta.stackoverflow.com/q/285551)');
+        await addComment(bar, '[Please do not upload images of code/data/errors.](//meta.stackoverflow.com/q/285551)');
     });
 }
 
@@ -155,7 +158,7 @@ function image_of_code_fa(bar) {
 function tag_spam_fa(bar) {
     create_fast_action(bar, 'Tag Spam', async () => {
         tag_edit();
-        await addComment('Please only add tags that are relevant to your question and avoid tag spamming.');
+        await addComment(bar, 'Please only add tags that are relevant to your question and avoid tag spamming.');
     });
 }
 
@@ -170,7 +173,7 @@ function cv_fa(bar) {
 function java_is_not_javascript_fa(bar) {
     create_fast_action(bar, 'Java/JS', async () => {
         tag_edit();
-        await addComment('[Java is not JavaScript!](http://javascriptisnotjava.com/)');
+        await addComment(bar, '[Java is not JavaScript!](http://javascriptisnotjava.com/)');
     });
 }
 
@@ -178,10 +181,24 @@ function java_is_not_javascript_fa(bar) {
 function not_in_english(bar) {
     create_fast_action(bar, 'English-only', async () => {
         cv_details();
-        await addComment('Welcome to Stack Overflow. This is an ' +
+        await addComment(bar, 'Welcome to Stack Overflow. This is an ' +
                          '[English-only](https://meta.stackoverflow.com/a/297680) site. ' +
                          'Please either translate your question to English or delete it ' +
                          'and post it on a language-specific site.');
+    });
+}
+
+// NAA/Comment fast-action
+function naa_comment(bar) {
+    create_fast_action(bar, 'NAA/Comment', async () => {
+        bar.closest('.post-layout').querySelector('.js-flag-post-link').click();
+        await waitForEl('.s-radio[value="AnswerNotAnAnswer"]');
+        document.querySelector('.s-radio[value="AnswerNotAnAnswer"]').click();
+        await addComment(bar, 'This does not answer the question and is only asking clarifying ' +
+                         'questions. It should have been posted as a comment instead. Once ' +
+                         'you gain enough reputation, you will be able to ' +
+                         '[comment everywhere](https://stackoverflow.com/help/privileges/comment)' +
+                         ' asking for clarifying information.');
     });
 }
 
@@ -193,12 +210,17 @@ function not_in_english(bar) {
     'use strict';
 
     if (can(privs.comment)) {
-        const comments_bar = create_comments_bar();
-        image_of_code_fa(comments_bar);
-        mcve_fa(comments_bar);
-        tag_spam_fa(comments_bar);
-        java_is_not_javascript_fa(comments_bar);
-        not_in_english(comments_bar);
+        const comment_bars = create_comment_bars();
+        const question_comments_bar = comment_bars[0];
+        image_of_code_fa(question_comments_bar);
+        mcve_fa(question_comments_bar);
+        tag_spam_fa(question_comments_bar);
+        java_is_not_javascript_fa(question_comments_bar);
+        not_in_english(question_comments_bar);
+
+        for (let i = 1; i < comment_bars.length; i++) {
+            naa_comment(comment_bars[i]);
+        }
     }
 
     if ((can(privs.flag) || can(privs.cv)) && not_closed()) {
