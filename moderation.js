@@ -177,17 +177,6 @@ function java_is_not_javascript_fa(bar) {
     });
 }
 
-// Not in english fast-action
-function not_in_english(bar) {
-    create_fast_action(bar, 'English-only', async () => {
-        cv_details();
-        await addComment(bar, 'Welcome to Stack Overflow. This is an ' +
-                         '[English-only](https://meta.stackoverflow.com/a/297680) site. ' +
-                         'Please either translate your question to English or delete it ' +
-                         'and post it on a language-specific site.');
-    });
-}
-
 // NAA/Comment fast-action
 function naa_comment(bar) {
     create_fast_action(bar, 'NAA/Comment', async () => {
@@ -216,7 +205,6 @@ function naa_comment(bar) {
         mcve_fa(question_comments_bar);
         tag_spam_fa(question_comments_bar);
         java_is_not_javascript_fa(question_comments_bar);
-        not_in_english(question_comments_bar);
 
         for (let i = 1; i < comment_bars.length; i++) {
             naa_comment(comment_bars[i]);
