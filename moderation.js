@@ -15,7 +15,7 @@
 
 const privs = {
     flag: 15,
-    comment: 500,
+    comment: 50,
     dv: 125,
     edit: 2000,
     cv: 3000,
